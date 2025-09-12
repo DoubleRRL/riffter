@@ -7,7 +7,7 @@ import os
 import sys
 from pathlib import Path
 import whisper
-from audio_transcription_pipeline import AudioTranscriptionPipeline
+from .audio_transcription_pipeline import AudioTranscriptionPipeline
 
 def find_video_files():
     """Find video/audio files in the project directory"""

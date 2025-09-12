@@ -13,25 +13,37 @@ A pipeline that transcribes comedy podcasts, fine-tunes AI models on Nick Mullen
 
 ```bash
 # Generate comedy with existing models
-python quick_generate.py
+python src/generation/quick_generate.py
 
 # Process new audio/video files
-python process_manual_video.py
+python src/transcription/process_manual_video.py
 
 # Train models on transcripts
-python fine_tune_comedy.py
+python src/training/fine_tune_comedy.py
 
 # Run web interface
 python main.py  # Backend on :8000
 cd frontend && npm run dev  # Frontend on :3000
 ```
 
-## Files You Need
+## Project Structure
 
-- `audio/` - Raw audio files from YouTube downloads
-- `transcripts/` - Whisper-generated transcripts from Cum Town episodes
-- `models/` - Fine-tuned GPT-2 models (nick_mullen_model, comedy_model)
-- `venv/` - Python environment with all dependencies
+```
+riffter/
+├── src/                    # Source code
+│   ├── transcription/      # Audio/video transcription scripts
+│   ├── training/          # Model fine-tuning scripts
+│   ├── generation/        # Content generation scripts
+│   ├── api/               # FastAPI server
+│   └── utils/             # Utility scripts
+├── tests/                 # Test files
+├── docs/                  # Documentation
+├── audio/                 # Raw audio files
+├── transcripts/           # Generated transcripts
+├── models/                # Fine-tuned AI models
+├── frontend/              # React web interface
+└── main.py               # Entry point
+```
 
 ## Current Status
 
