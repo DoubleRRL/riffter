@@ -49,3 +49,12 @@ transcripts/
 # Temporary files
 *.tmp
 *.temp
+
+# Cookies and sensitive data
+*youtube*cookies*
+*youtube*cookie*
+*cookies*.json
+*cookies*.txt
+*cookie*.rtf
+yt*cookies*
+yt*cookie*
