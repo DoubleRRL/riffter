@@ -1,0 +1,51 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Large files
+*.mp3
+*.m4a
+*.wav
+
+# Model checkpoints (too large for git)
+models/*/checkpoint-*/
+models/*/*.safetensors
+models/*/*.bin
+models/*/*.pt
+
+# Logs
+*.log
+logs/
+
+# Data
+data/
+audio/
+transcripts/
+
+# Temporary files
+*.tmp
+*.temp
