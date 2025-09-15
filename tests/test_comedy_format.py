@@ -12,7 +12,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class ComedyFormatTester:
-    def __init__(self, model_path="models/nick_mullen_model"):
+    def __init__(self, model_path="/Users/RRL_1/.llama/checkpoints/Llama3.1-8B"):
         self.model_path = model_path
         self.tokenizer = None
         self.model = None
@@ -31,7 +31,7 @@ class ComedyFormatTester:
         """Generate comedy with proper joke format structure"""
 
         # Create a structured prompt that encourages the joke format
-        structured_prompt = f"""Hey guys, welcome back to the podcast. Today we're talking about {prompt}.
+        structured_prompt = f"""Today we're talking about {prompt}.
 
 Let me tell you a joke:
 
@@ -63,7 +63,7 @@ Premise: """
     def format_joke_output(self, content, original_prompt):
         """Format the generated content into proper joke structure"""
 
-        print("🎭 NICK MULLEN COMEDY GENERATOR 🎭")
+        print("🎭 LLAMA 3.1-8B COMEDY GENERATOR 🎭")
         print("=" * 60)
         print(f"Topic: {original_prompt}")
         print("-" * 60)
@@ -113,7 +113,7 @@ Premise: """
         print("-" * 60)
         return content
 
-    def test_multiple_temperatures(self, prompt="Hey guys, welcome back to the podcast"):
+    def test_multiple_temperatures(self, prompt="Tell me about dating disasters"):
         """Test generation with different temperature settings"""
 
         temperatures = [0.5, 0.7, 0.8, 0.9, 1.0]
@@ -130,7 +130,7 @@ Premise: """
     def interactive_test(self):
         """Interactive testing mode"""
 
-        print("🎪 Nick Mullen Comedy Tester 🎪")
+        print("🎪 Llama 3.1-8B Comedy Tester 🎪")
         print("Type 'quit' to exit, 'temp' to test temperatures, or enter a prompt")
         print("-" * 50)
 
@@ -151,7 +151,7 @@ def main():
 
     # Quick test first
     print("\n🚀 QUICK TEST:")
-    tester.generate_with_format("Hey guys, today's topic is dating disasters")
+    tester.generate_with_format("dating disasters")
 
     print("\n" + "="*60)
     print("🎯 TESTING OPTIONS:")
@@ -164,14 +164,14 @@ def main():
     if choice == '1':
         tester.interactive_test()
     elif choice == '2':
-        prompt = input("Enter prompt for temperature testing: ").strip() or "Hey guys, welcome back to the podcast"
+        prompt = input("Enter prompt for temperature testing: ").strip() or "dating disasters"
         tester.test_multiple_temperatures(prompt)
     elif choice == '3':
-        prompt = input("Enter prompt: ").strip() or "Hey guys, welcome back to the podcast"
+        prompt = input("Enter prompt: ").strip() or "dating disasters"
         tester.generate_with_format(prompt)
     else:
         print("Invalid choice, running quick test...")
-        tester.generate_with_format("Tell me about your dating life")
+        tester.generate_with_format("dating disasters")
 
 if __name__ == "__main__":
     main()

@@ -10,10 +10,10 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-def generate_samples(model_path="models/nick_mullen_model", prompt="Hey guys, welcome back to the podcast", num_samples=3):
+def generate_samples(model_path="/Users/RRL_1/.llama/checkpoints/Llama3.1-8B", prompt="Hey guys, welcome back to the podcast", num_samples=3):
     """Generate comedy samples"""
 
-    logger.info(f"Loading Nick Mullen comedy model...")
+    logger.info(f"Loading Llama 3.1-8B comedy model...")
 
     # Load tokenizer and model
     tokenizer = AutoTokenizer.from_pretrained(model_path)
@@ -23,7 +23,7 @@ def generate_samples(model_path="models/nick_mullen_model", prompt="Hey guys, we
     model = AutoModelForCausalLM.from_pretrained(model_path)
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
-    print("🎭 Nick Mullen Comedy Generator 🎭")
+    print("🎭 Llama 3.1-8B Comedy Generator 🎭")
     print("=" * 40)
 
     for i in range(num_samples):

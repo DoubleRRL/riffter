@@ -1,58 +1,58 @@
 # Riffter
 
-A pipeline that transcribes comedy podcasts, fine-tunes AI models on Nick Mullen's style, and generates new comedy content. Currently processing Cum Town episodes to create Nick Mullen-style AI comedy.
+AI-powered comedy generator that transcribes podcasts and creates Nick Mullen-style content.
 
-## What It Does
+## Features
 
-- **Transcribes Audio**: Downloads YouTube videos and uses Whisper to create transcripts
-- **Fine-tunes Models**: Trains GPT-2 models on Nick Mullen comedy transcripts
-- **Generates Comedy**: Creates new content in Nick Mullen's rambling, absurd style
-- **Web Interface**: Simple React frontend for testing generation
+- Downloads YouTube videos and extracts audio transcripts using Whisper
+- Fine-tunes GPT-2 models on comedy transcripts
+- Generates rambling, absurd comedy in Nick Mullen's style
+- Web interface for testing and generating content
+- CPU-only operation (no GPU required)
 
-## Quick Start
+## Usage
 
 ```bash
 # Generate comedy with existing models
 python src/generation/quick_generate.py
 
-# Process new audio/video files
+# Process new videos for training data
 python src/transcription/process_manual_video.py
 
-# Train models on transcripts
+# Train new models
 python src/training/fine_tune_comedy.py
 
-# Run web interface
-python main.py  # Backend on :8000
-cd frontend && npm run dev  # Frontend on :3000
+# Start web interface
+python main.py                    # Backend on :8000
+cd frontend && npm run dev       # Frontend on :3000
 ```
 
 ## Project Structure
 
 ```
 riffter/
-├── src/                    # Source code
-│   ├── transcription/      # Audio/video transcription scripts
-│   ├── training/          # Model fine-tuning scripts
-│   ├── generation/        # Content generation scripts
-│   ├── api/               # FastAPI server
-│   └── utils/             # Utility scripts
-├── tests/                 # Test files
-├── docs/                  # Documentation
-├── audio/                 # Raw audio files
-├── transcripts/           # Generated transcripts
-├── models/                # Fine-tuned AI models
-├── frontend/              # React web interface
-└── main.py               # Entry point
+├── src/
+│   ├── transcription/     # Video download & transcription
+│   ├── training/         # Model fine-tuning scripts
+│   ├── generation/       # Content generation
+│   ├── api/              # FastAPI backend
+│   └── utils/            # Helper scripts
+├── tests/                # Test files
+├── models/               # Trained AI models
+├── transcripts/          # Generated transcripts
+├── frontend/             # React web app
+└── main.py              # Server entry point
 ```
 
-## Current Status
+## Status
 
-Working on a 2-hour Cum Town compilation. Models generate authentic Nick Mullen-style rambling comedy about random topics. CPU-friendly, no GPU required.
+Currently trained on Cum Town episodes. Generates authentic Nick Mullen-style comedy rants about random topics.
 
-## Tech Stack
+## Dependencies
 
-- Python/Whisper for transcription
-- GPT-2 with LoRA fine-tuning
-- FastAPI backend
-- React frontend
-- yt-dlp for YouTube downloads
+- Python 3.8+
+- Whisper (OpenAI)
+- Transformers (Hugging Face)
+- yt-dlp
+- FastAPI
+- React

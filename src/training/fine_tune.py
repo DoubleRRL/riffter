@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Fine-tune a small language model on Cum Town and Adam Friedland Show Podcast style
+Fine-tune Llama 3.1-8B model on comedy podcast transcripts
 Uses PEFT for efficient training on limited hardware
 """
 
@@ -27,9 +27,9 @@ class ComedyFineTuner:
         self.model_dir = Path("models")
         self.model_dir.mkdir(exist_ok=True)
 
-        # Use a small, efficient model for M2 Air
-        self.model_name = "gpt2"  # Small and efficient for fine-tuning
-        self.output_dir = self.model_dir / "comedy_model"
+        # Use downloaded Llama 3.1-8B model
+        self.model_name = "/Users/RRL_1/.llama/checkpoints/Llama3.1-8B"  # Downloaded Llama 3.1-8B
+        self.output_dir = self.model_dir / "fine_tuned_llama"
 
     def load_training_data(self):
         """Load full transcripts from scraped data"""
@@ -63,11 +63,11 @@ class ComedyFineTuner:
         if tokenizer.pad_token is None:
             tokenizer.pad_token = tokenizer.eos_token
 
-        # Load model optimized for M2 (Apple Silicon)
+        # Load model optimized for available hardware
         model = AutoModelForCausalLM.from_pretrained(
             self.model_name,
-            torch_dtype=torch.float32,  # Use float32 for M2 compatibility
-            device_map="cpu",  # Use CPU for now (M2 can handle it)
+            torch_dtype=torch.bfloat16 if torch.cuda.is_available() else torch.float32,  # Use bfloat16 for GPU, float32 for CPU
+            device_map="auto",  # Use auto device mapping
         )
 
         logger.info("Model loaded successfully")
@@ -84,7 +84,7 @@ class ComedyFineTuner:
             lora_dropout=0.1,
             bias="none",
             task_type="CAUSAL_LM",
-            target_modules=["c_attn", "c_proj"]  # GPT-2 attention modules
+            target_modules=["q_proj", "k_proj", "v_proj", "o_proj"]  # Llama attention modules
         )
 
         # Apply PEFT to model
@@ -139,7 +139,7 @@ class ComedyFineTuner:
             mlm=False  # Causal LM, not masked LM
         )
 
-        # Training arguments - optimized for M2 Air
+        # Training arguments - optimized for Llama 3.1-8B fine-tuning
         training_args = TrainingArguments(
             output_dir=str(self.output_dir),
             num_train_epochs=2,  # Fewer epochs for quick testing
@@ -200,7 +200,7 @@ class ComedyFineTuner:
             )
 
             # Generate a sample
-            prompt = "You are Nick Mullen from Cum Town. Generate an absurd riff about dating apps:"
+            prompt = "You are a comedian. Generate an absurd riff about dating apps:"
             result = generator(
                 prompt,
                 max_length=100,

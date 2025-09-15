@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Simple script to generate Nick Mullen-style comedy using fine-tuned GPT-2 models
+Simple script to generate comedy using fine-tuned Llama 3.1-8B models
 """
 
 import torch
@@ -51,21 +51,20 @@ def generate_comedy_content(model_path, prompt="Hey guys, welcome back to the po
 def main():
     # Available models
     models = {
-        "1": ("models/nick_mullen_model", "Nick Mullen GPT-2 Model"),
-        "2": ("models/comedy_model", "General Comedy GPT-2 Model")
+        "1": ("/Users/RRL_1/.llama/checkpoints/Llama3.1-8B", "Llama 3.1-8B Comedy Model")
     }
 
-    print("🎭 Nick Mullen Comedy Generator 🎭")
-    print("==================================")
+    print("🎭 Llama 3.1-8B Comedy Generator 🎭")
+    print("====================================")
     print("Available models:")
     for key, (path, desc) in models.items():
         print(f"{key}. {desc}")
 
-    choice = input("\nSelect model (1 or 2): ").strip()
+    choice = input("\nSelect model (1): ").strip()
 
     if choice not in models:
-        print("Invalid choice!")
-        return
+        print("Invalid choice! Using Llama 3.1-8B by default.")
+        choice = "1"
 
     model_path, description = models[choice]
     print(f"\nUsing: {description}")

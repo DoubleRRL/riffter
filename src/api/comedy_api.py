@@ -56,7 +56,7 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 import sys
 
 def generate_riff(topic):
-    model_path = "models/nick_mullen_model"
+    model_path = "/Users/RRL_1/.llama/checkpoints/Llama3.1-8B"
     tokenizer = AutoTokenizer.from_pretrained(model_path)
     model = AutoModelForCausalLM.from_pretrained(model_path)
 
@@ -115,7 +115,7 @@ import sys
 import re
 
 def generate_joke(topic):
-    model_path = "models/nick_mullen_model"
+    model_path = "/Users/RRL_1/.llama/checkpoints/Llama3.1-8B"
     tokenizer = AutoTokenizer.from_pretrained(model_path)
     model = AutoModelForCausalLM.from_pretrained(model_path)
 
@@ -226,7 +226,7 @@ def health():
     return jsonify({'status': 'healthy'})
 
 if __name__ == '__main__':
-    print("🎭 Starting Nick Mullen Comedy API Server...")
+    print("🎭 Starting Llama 3.1-8B Comedy API Server...")
     print("Frontend will be available at: http://localhost:3000")
     print("API endpoints:")
     print("  POST /riff - Generate comedy riff")
