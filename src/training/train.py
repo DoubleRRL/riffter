@@ -52,7 +52,7 @@ def tokenize_function(examples, tokenizer):
 
 def train_model(
     data_path: str,
-    model_name: str = "microsoft/DialoGPT-medium",  # Already cached and works well for conversations
+    model_name: str = "microsoft/DialoGPT-small",  # Smaller model (117M params) that fits in memory
     output_dir: str = "models/nick_mullen_model",
     epochs: int = 3,
     batch_size: int = 1,
@@ -187,7 +187,7 @@ def main():
     train_model(
         data_path=training_data_path,
         epochs=3,
-        batch_size=4,  # Can use larger batch size for smaller DialoGPT-medium model
+        batch_size=2,  # Small batch size for DialoGPT-small on M2
         learning_rate=2e-5,
         gradient_accumulation_steps=4  # Effective batch size = 4
     )

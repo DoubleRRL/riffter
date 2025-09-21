@@ -4,12 +4,12 @@ AI-powered comedy sidekick for generating edgy, Nick Mullen-style riffs and joke
 
 ## Overview
 
-This project fine-tunes DialoGPT-medium on Cum Town podcast transcripts to generate Nick Mullen-style comedy. The model learns from 31,000+ chunks of raw podcast dialogue to capture Nick's raw, unfiltered humor style. The system generates structured jokes and quick riffs through a simple web interface.
+This project fine-tunes DialoGPT-small on Cum Town podcast transcripts to generate Nick Mullen-style comedy. The model learns from 600+ chunks of raw podcast dialogue to capture Nick's raw, unfiltered humor style. The system generates structured jokes and quick riffs through a simple web interface.
 
 ## Tech Stack
 
 -   **Backend**: FastAPI, Python
--   **AI**: Hugging Face Transformers with fine-tuned DialoGPT-medium
+-   **AI**: Hugging Face Transformers with fine-tuned DialoGPT-small
 -   **Frontend**: React, Vite
 
 ## Getting Started

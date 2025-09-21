@@ -28,7 +28,7 @@ def test_hf_access():
         # Test downloading tokenizer (smaller, faster)
         logger.info("Testing tokenizer download...")
         tokenizer = AutoTokenizer.from_pretrained(
-            "microsoft/DialoGPT-medium"
+            "microsoft/DialoGPT-small"
         )
         logger.info("✅ Tokenizer downloaded successfully")
 
@@ -67,7 +67,7 @@ def test_hf_access():
             logger.info("Using disk offloading for CPU")
 
         model = AutoModelForCausalLM.from_pretrained(
-            "microsoft/DialoGPT-medium",
+            "microsoft/DialoGPT-small",
             **model_kwargs
         )
         logger.info("✅ Model downloaded successfully")
@@ -83,7 +83,7 @@ def test_hf_access():
         return False
 
 if __name__ == "__main__":
-    print("Testing Hugging Face access for DialoGPT-medium...")
+    print("Testing Hugging Face access for DialoGPT-small...")
     success = test_hf_access()
 
     if success:
