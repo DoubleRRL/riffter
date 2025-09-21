@@ -59,8 +59,8 @@ class NickMullenGenerator:
             self.generator = pipeline(
                 "text-generation",
                 model=model,
-                tokenizer=tokenizer,
-                device=0 if torch.cuda.is_available() else -1
+                tokenizer=tokenizer
+                # Don't specify device when using accelerate
             )
 
             logger.info("Fine-tuned model loaded successfully")
