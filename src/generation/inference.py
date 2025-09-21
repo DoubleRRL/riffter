@@ -55,7 +55,7 @@ class NickMullenGenerator:
     def generate_riff(self, topic, max_length=100):
         """Generate a comedy riff about a topic"""
         if not self.generator:
-            return self._fallback_riff(topic)
+            raise Exception("Model not loaded - cannot generate riff")
 
         # More specific prompt for Nick Mullen style
         prompt = f"""You are Nick Mullen, the comedian from Cum Town and The Adam Friedland Show. Generate a short, edgy comedy riff about {topic}. Be absurd, ironic, and filthy like your style. Keep it under 50 words.
@@ -83,20 +83,22 @@ Riff about {topic}:"""
             # Clean up the riff
             riff = self._clean_riff(riff)
 
-            # If riff is too long or empty, use fallback
+            # If riff is too long or empty, raise error
             if len(riff.split()) > 30 or len(riff.strip()) < 10:
-                return self._fallback_riff(topic)
+                raise Exception(f"Generated riff too short or too long: {riff}")
 
-            return riff if riff else self._fallback_riff(topic)
+            if not riff:
+                raise Exception("Generated riff was empty")
+            return riff
 
         except Exception as e:
             logger.error(f"Error generating riff: {e}")
-            return self._fallback_riff(topic)
+            raise Exception(f"Failed to generate riff: {str(e)}")
 
     def generate_joke(self, topic, max_length=200):
         """Generate a structured joke about a topic"""
         if not self.generator:
-            return self._fallback_joke(topic)
+            raise Exception("Model not loaded - cannot generate joke")
 
         prompt = f"""You are Nick Mullen from Cum Town. Generate a structured joke about {topic}:
 
@@ -142,7 +144,58 @@ JSON:"""
 
         except Exception as e:
             logger.error(f"Error generating joke: {e}")
-            return self._fallback_joke(topic)
+            raise Exception(f"Failed to generate joke: {str(e)}")
+
+    def regenerate_joke_part(self, topic, joke_context, part_to_regenerate):
+        """Regenerate a specific part of a joke"""
+        if not self.generator:
+            raise Exception("Model not loaded - cannot regenerate joke part")
+
+        part_prompts = {
+            "premise": f"Generate a new premise about {topic} in Nick Mullen's style:",
+            "punchline": f"Generate a new punchline for this premise: {joke_context.get('premise', '')}",
+            "initial_tag": f"Generate a new tag for this joke: {joke_context.get('premise', '')} -> {joke_context.get('punchline', '')}",
+            "alternate_angle": f"Generate a new angle on this topic: {topic}",
+            "additional_tags": f"Generate 2-3 new tags for this joke about {topic}"
+        }
+
+        if part_to_regenerate not in part_prompts:
+            return joke_context.get(part_to_regenerate, "Generated content")
+
+        prompt = f"""You are Nick Mullen from Cum Town. {part_prompts[part_to_regenerate]}
+
+Style: Concise, punchy, absurd connections, raw phonetic sounds, modern slang when appropriate.
+Keep it under 20 words.
+
+Response:"""
+
+        try:
+            result = self.generator(
+                prompt,
+                max_length=50,
+                num_return_sequences=1,
+                temperature=0.9,
+                top_p=0.95,
+                do_sample=True,
+                pad_token_id=self.generator.tokenizer.eos_token_id
+            )
+
+            new_content = result[0]["generated_text"].strip()
+
+            # Clean up the generated content
+            new_content = re.sub(r'^[^a-zA-Z0-9]*', '', new_content)
+            new_content = re.sub(r'[^a-zA-Z0-9]*$', '', new_content)
+
+            if part_to_regenerate == "additional_tags":
+                # For tags, try to split into array format
+                tags = [tag.strip() for tag in new_content.split(',') if tag.strip()]
+                return tags[:3] if tags else ["Tag 1", "Tag 2"]
+
+            return new_content
+
+        except Exception as e:
+            logger.error(f"Error regenerating joke part: {e}")
+            raise Exception(f"Failed to regenerate joke part: {str(e)}")
 
     def _clean_riff(self, riff):
         """Clean up generated riff text"""
@@ -194,28 +247,6 @@ JSON:"""
 
         return joke_parts
 
-    def _fallback_riff(self, topic):
-        """Fallback riff generation"""
-        fallbacks = [
-            f"Imagine if {topic} was actually a conspiracy theory about lizard people running the government.",
-            f"You ever think {topic} is just a front for something way more fucked up?",
-            f"{topic} is like that one weird uncle who shows up uninvited and ruins everything.",
-        ]
-        return fallbacks[hash(topic) % len(fallbacks)]
-
-    def _fallback_joke(self, topic):
-        """Fallback joke structure"""
-        return {
-            "premise": f"You know what's fucked up about {topic}?",
-            "punchline": f"It's actually way more complicated than anyone admits.",
-            "initial_tag": f"Like, who designed this shit anyway?",
-            "alternate_angle": f"Imagine if we just ignored {topic} entirely.",
-            "additional_tags": [
-                "Life would be so much simpler",
-                "But then we'd have nothing to complain about",
-                "Classic human problem"
-            ]
-        }
 
 # Global generator instance
 _generator = None
@@ -234,6 +265,10 @@ def generate_riff(topic):
 def generate_joke(topic):
     """Convenience function for joke generation"""
     return get_generator().generate_joke(topic)
+
+def regenerate_joke_part(topic, joke_context, part_to_regenerate):
+    """Convenience function for regenerating joke parts"""
+    return get_generator().regenerate_joke_part(topic, joke_context, part_to_regenerate)
 
 if __name__ == "__main__":
     # Test the generator

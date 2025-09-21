@@ -52,7 +52,7 @@ cd ..
 
 # Start backend in background
 echo -e "${GREEN}✅ starting backend on port 8000...${NC}"
-python src/api/main.py &
+PYTHONPATH="/Users/RRL_1/riffter:$PYTHONPATH" python src/api/main.py &
 BACKEND_PID=$!
 
 # Wait a moment for backend to start

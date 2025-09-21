@@ -15,8 +15,8 @@ app = FastAPI(title="Riffter API", description="AI-powered comedy riff generator
 # CORS for frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:5173"],  # React dev server
-    allow_credentials=True,
+    allow_origins=["http://localhost:3000", "http://localhost:5173", "http://localhost:5174", "http://localhost:5175", "http://localhost:5176", "http://localhost:5177"],  # React/Vite dev servers
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -70,9 +70,7 @@ def generate_riff(request: RiffRequest):
         return {"riff": riff}
 
     except Exception as e:
-        # Fallback riff
-        fallback_riff = f"Imagine if {request.topic} was actually a conspiracy theory about alien lizards running the government."
-        return {"riff": fallback_riff}
+        raise HTTPException(status_code=500, detail=f"Failed to generate riff: {str(e)}")
 
 @app.post("/joke")
 def generate_joke(request: JokeRequest):
@@ -84,20 +82,12 @@ def generate_joke(request: JokeRequest):
         required_keys = ["premise", "punchline", "initial_tag", "alternate_angle", "additional_tags"]
         for key in required_keys:
             if key not in joke_structure:
-                joke_structure[key] = f"Generated {key} for {request.topic}"
+                raise HTTPException(status_code=500, detail=f"Missing required key: {key}")
 
         return {"joke": joke_structure}
 
     except Exception as e:
-        # Fallback structure
-        fallback_joke = {
-            "premise": f"Premise about {request.topic}",
-            "punchline": "This is where the punchline goes",
-            "initial_tag": "First tag here",
-            "alternate_angle": "Another angle on the premise",
-            "additional_tags": ["Tag 1", "Tag 2", "Tag 3"]
-        }
-        return {"joke": fallback_joke}
+        raise HTTPException(status_code=500, detail=f"Failed to generate joke: {str(e)}")
 
 @app.post("/regenerate_joke_part")
 def regenerate_joke_part(request: JokeRegenerationRequest):
