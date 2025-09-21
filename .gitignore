@@ -50,6 +50,11 @@ transcripts/
 *.tmp
 *.temp
 
+# Environment variables and sensitive data
+.env
+.env.local
+.env.*.local
+
 # Cookies and sensitive data
 *youtube*cookies*
 *youtube*cookie*

@@ -9,9 +9,10 @@ function App() {
   const [currentRiff, setCurrentRiff] = useState('')
   const [currentJoke, setCurrentJoke] = useState({
     premise: '',
-    punchlines: ['', '', ''],
-    anotherAngle: '',
-    tags: ['', '', '']
+    punchline: '',
+    initial_tag: '',
+    alternate_angle: '',
+    additional_tags: []
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -111,16 +112,13 @@ function App() {
       const data = await response.json()
       const jokeData = data.joke
 
-      // Format the joke data
+      // Directly map the API response to the state
       const newJoke = {
         premise: jokeData.premise || '',
-        punchlines: [
-          jokeData.punchline || '',
-          jokeData.initial_tag || '',
-          jokeData.alternate_angle || ''
-        ].filter(line => line.trim()),
-        anotherAngle: jokeData.alternate_angle || '',
-        tags: jokeData.additional_tags || ['', '', '']
+        punchline: jokeData.punchline || '',
+        initial_tag: jokeData.initial_tag || '',
+        alternate_angle: jokeData.alternate_angle || '',
+        additional_tags: Array.isArray(jokeData.additional_tags) ? jokeData.additional_tags : []
       }
 
       setCurrentJoke(newJoke)
@@ -143,74 +141,60 @@ function App() {
     }
   }
 
-  const regenerateField = async (fieldType, fieldIndex = null) => {
-    if (!topic.trim()) return
+  const regenerateField = async (part) => {
+    if (!topic.trim()) return;
 
-    setLoading(true)
-    setError('')
+    setLoading(true);
+    setError('');
 
     try {
-      // Mock regeneration - in real app, this would call a specific endpoint
-      const response = await fetch('http://localhost:8000/joke', {
+      const response = await fetch('http://localhost:8000/regenerate_joke_part', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           topic: topic.trim(),
-          regenerate: fieldType,
-          index: fieldIndex
+          joke_context: currentJoke,
+          part_to_regenerate: part
         }),
-      })
+      });
 
       if (!response.ok) {
-        throw new Error(`Server error: ${response.status}`)
+        throw new Error(`Server error: ${response.status}`);
       }
 
-      const data = await response.json()
-      const jokeData = data.joke
+      const data = await response.json();
+      const newContent = data.new_content;
 
-      // Update specific field
       setCurrentJoke(prev => {
-        const updated = { ...prev }
-        if (fieldType === 'premise') {
-          updated.premise = jokeData.premise || prev.premise
-        } else if (fieldType === 'punchline' && fieldIndex !== null) {
-          updated.punchlines = [...prev.punchlines]
-          updated.punchlines[fieldIndex] = jokeData.punchline || prev.punchlines[fieldIndex]
-        } else if (fieldType === 'anotherAngle') {
-          updated.anotherAngle = jokeData.alternate_angle || prev.anotherAngle
-        } else if (fieldType === 'tag' && fieldIndex !== null) {
-          updated.tags = [...prev.tags]
-          updated.tags[fieldIndex] = jokeData.additional_tags?.[fieldIndex] || prev.tags[fieldIndex]
+        const updated = { ...prev };
+        if (Object.keys(updated).includes(part)) {
+          updated[part] = newContent;
         }
-        return updated
-      })
+        return updated;
+      });
 
     } catch (err) {
-      setError(`Regeneration failed: ${err.message}`)
+      setError(`Regeneration failed: ${err.message}`);
+      console.error('Regeneration error:', err);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const updateJokeField = (fieldType, value, index = null) => {
     setCurrentJoke(prev => {
-      const updated = { ...prev }
-      if (fieldType === 'premise') {
-        updated.premise = value
-      } else if (fieldType === 'punchline' && index !== null) {
-        updated.punchlines = [...prev.punchlines]
-        updated.punchlines[index] = value
-      } else if (fieldType === 'anotherAngle') {
-        updated.anotherAngle = value
-      } else if (fieldType === 'tag' && index !== null) {
-        updated.tags = [...prev.tags]
-        updated.tags[index] = value
+      const updated = { ...prev };
+      if (fieldType === 'additional_tags' && index !== null) {
+        updated.additional_tags = [...prev.additional_tags];
+        updated.additional_tags[index] = value;
+      } else if (Object.keys(updated).includes(fieldType)) {
+        updated[fieldType] = value;
       }
-      return updated
-    })
-  }
+      return updated;
+    });
+  };
 
   const saveJoke = () => {
     const jokeText = formatJokeForSharing(currentJoke, topic)
@@ -228,13 +212,12 @@ function App() {
   const formatJokeForSharing = (joke, topicText) => {
     let text = `🎭 Joke about "${topicText}":\n\n`
     if (joke.premise) text += `Premise: ${joke.premise}\n\n`
-    joke.punchlines.forEach((punchline, i) => {
-      if (punchline.trim()) text += `Punchline ${i + 1}: ${punchline}\n`
-    })
-    if (joke.anotherAngle) text += `\nAnother Angle: ${joke.anotherAngle}\n`
-    if (joke.tags.some(tag => tag.trim())) {
+    if (joke.punchline) text += `Punchline: ${joke.punchline}\n`
+    if (joke.initial_tag) text += `Initial Tag: ${joke.initial_tag}\n`
+    if (joke.alternate_angle) text += `\nAnother Angle: ${joke.alternate_angle}\n`
+    if (joke.additional_tags.some(tag => tag.trim())) {
       text += `\nTags:\n`
-      joke.tags.forEach((tag, i) => {
+      joke.additional_tags.forEach((tag, i) => {
         if (tag.trim()) text += `• ${tag}\n`
       })
     }
@@ -501,7 +484,7 @@ function App() {
             </motion.div>
           )}
 
-          {activeTab === 'joke' && (currentJoke.premise || currentJoke.punchlines.some(p => p.trim())) && (
+          {activeTab === 'joke' && (currentJoke.premise || currentJoke.punchline || currentJoke.initial_tag) && (
             <motion.div
               key="joke"
               className="joke-container"
@@ -548,8 +531,8 @@ function App() {
                     <motion.button
                       onClick={() => regenerateField('premise')}
                       className="regen-btn"
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
+                      whileHover={{ scale: 1.1, rotate: 15 }}
+                      whileTap={{ scale: 0.9, rotate: -15, background: '#2ecc71' }}
                     >
                       <RefreshCw />
                     </motion.button>
@@ -572,56 +555,23 @@ function App() {
                   )}
                 </div>
 
-                {/* Punchlines */}
-                {currentJoke.punchlines.map((punchline, index) => (
-                  <div key={index} className="joke-field">
-                    <div className="field-header">
-                      <span className="field-label">Punchline {index + 1}</span>
-                      <motion.button
-                        onClick={() => regenerateField('punchline', index)}
-                        className="regen-btn"
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
-                      >
-                        <RefreshCw />
-                      </motion.button>
-                    </div>
-                    {editingField === `punchline-${index}` ? (
-                      <textarea
-                        value={punchline}
-                        onChange={(e) => updateJokeField('punchline', e.target.value, index)}
-                        onBlur={() => setEditingField(null)}
-                        autoFocus
-                        className="joke-input"
-                      />
-                    ) : (
-                      <div
-                        className="joke-text"
-                        onClick={() => setEditingField(`punchline-${index}`)}
-                      >
-                        {punchline || "Click to add punchline..."}
-                      </div>
-                    )}
-                  </div>
-                ))}
-
-                {/* Another Angle */}
+                {/* Punchline */}
                 <div className="joke-field">
                   <div className="field-header">
-                    <span className="field-label">Another Angle</span>
+                    <span className="field-label">Punchline</span>
                     <motion.button
-                      onClick={() => regenerateField('anotherAngle')}
+                      onClick={() => regenerateField('punchline')}
                       className="regen-btn"
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
+                      whileHover={{ scale: 1.1, rotate: 15 }}
+                      whileTap={{ scale: 0.9, rotate: -15, background: '#2ecc71' }}
                     >
                       <RefreshCw />
                     </motion.button>
                   </div>
-                  {editingField === 'anotherAngle' ? (
+                  {editingField === 'punchline' ? (
                     <textarea
-                      value={currentJoke.anotherAngle}
-                      onChange={(e) => updateJokeField('anotherAngle', e.target.value)}
+                      value={currentJoke.punchline}
+                      onChange={(e) => updateJokeField('punchline', e.target.value)}
                       onBlur={() => setEditingField(null)}
                       autoFocus
                       className="joke-input"
@@ -629,23 +579,86 @@ function App() {
                   ) : (
                     <div
                       className="joke-text"
-                      onClick={() => setEditingField('anotherAngle')}
+                      onClick={() => setEditingField('punchline')}
                     >
-                      {currentJoke.anotherAngle || "Click to add another angle..."}
+                      {currentJoke.punchline || "Click to add punchline..."}
+                    </div>
+                  )}
+                </div>
+
+                {/* Initial Tag */}
+                <div className="joke-field">
+                  <div className="field-header">
+                    <span className="field-label">Initial Tag</span>
+                    <motion.button
+                      onClick={() => regenerateField('initial_tag')}
+                      className="regen-btn"
+                      whileHover={{ scale: 1.1, rotate: 15 }}
+                      whileTap={{ scale: 0.9, rotate: -15, background: '#2ecc71' }}
+                    >
+                      <RefreshCw />
+                    </motion.button>
+                  </div>
+                  {editingField === 'initial_tag' ? (
+                    <textarea
+                      value={currentJoke.initial_tag}
+                      onChange={(e) => updateJokeField('initial_tag', e.target.value)}
+                      onBlur={() => setEditingField(null)}
+                      autoFocus
+                      className="joke-input"
+                    />
+                  ) : (
+                    <div
+                      className="joke-text"
+                      onClick={() => setEditingField('initial_tag')}
+                    >
+                      {currentJoke.initial_tag || "Click to add initial tag..."}
+                    </div>
+                  )}
+                </div>
+
+                {/* Another Angle */}
+                <div className="joke-field">
+                  <div className="field-header">
+                    <span className="field-label">Another Angle</span>
+                    <motion.button
+                      onClick={() => regenerateField('alternate_angle')}
+                      className="regen-btn"
+                      whileHover={{ scale: 1.1, rotate: 15 }}
+                      whileTap={{ scale: 0.9, rotate: -15, background: '#2ecc71' }}
+                    >
+                      <RefreshCw />
+                    </motion.button>
+                  </div>
+                  {editingField === 'alternate_angle' ? (
+                    <textarea
+                      value={currentJoke.alternate_angle}
+                      onChange={(e) => updateJokeField('alternate_angle', e.target.value)}
+                      onBlur={() => setEditingField(null)}
+                      autoFocus
+                      className="joke-input"
+                    />
+                  ) : (
+                    <div
+                      className="joke-text"
+                      onClick={() => setEditingField('alternate_angle')}
+                    >
+                      {currentJoke.alternate_angle || "Click to add another angle..."}
                     </div>
                   )}
                 </div>
 
                 {/* Tags */}
-                {currentJoke.tags.map((tag, index) => (
+                {currentJoke.additional_tags.map((tag, index) => (
                   <div key={index} className="joke-field">
                     <div className="field-header">
                       <span className="field-label">Tag {index + 1}</span>
                       <motion.button
-                        onClick={() => regenerateField('tag', index)}
+                        // Note: regenerating one tag regenerates all of them per backend logic
+                        onClick={() => regenerateField('additional_tags', index)}
                         className="regen-btn"
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
+                        whileHover={{ scale: 1.1, rotate: 15 }}
+                        whileTap={{ scale: 0.9, rotate: -15, background: '#2ecc71' }}
                       >
                         <RefreshCw />
                       </motion.button>
@@ -654,7 +667,7 @@ function App() {
                       <input
                         type="text"
                         value={tag}
-                        onChange={(e) => updateJokeField('tag', e.target.value, index)}
+                        onChange={(e) => updateJokeField('additional_tags', e.target.value, index)}
                         onBlur={() => setEditingField(null)}
                         autoFocus
                         className="tag-input"
@@ -685,14 +698,14 @@ function App() {
               transition={{ duration: 0.3 }}
             >
               <div className="history-header">
-                <h4>Previous Riffs</h4>
+                <h4>Previous Generations</h4>
                 <button onClick={clearHistory} className="clear-btn">
                   Clear All
                 </button>
               </div>
               <div className="history-list">
                 {history.length === 0 ? (
-                  <p className="empty-history">No riffs yet. Generate your first one!</p>
+                  <p className="empty-history">No generations yet. Create your first riff or joke!</p>
                 ) : (
                   history.map((item) => (
                     <motion.div
@@ -704,8 +717,12 @@ function App() {
                       onClick={() => loadFromHistory(item)}
                     >
                       <div className="history-topic">{item.topic}</div>
+                      <div className="history-type">{item.type === 'riff' ? '🎭 Riff' : '🎪 Joke'}</div>
                       <div className="history-preview">
-                        {item.riff.substring(0, 100)}...
+                        {item.type === 'riff'
+                          ? item.content.substring(0, 100)
+                          : item.content.premise?.substring(0, 100) || 'Structured joke'
+                        }...
                       </div>
                       <div className="history-date">
                         {new Date(item.timestamp).toLocaleDateString()}

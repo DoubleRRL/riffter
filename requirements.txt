@@ -1,7 +1,11 @@
 fastapi
 uvicorn
-pydantic
+websockets
+whisper
+youtube_transcript_api
+yt-dlp
 ollama
+pydantic
 requests
 transformers
 torch
@@ -11,7 +15,6 @@ peft
 bitsandbytes
 pandas
 openpyxl
-yt-dlp
 openai-whisper
 librosa
 soundfile

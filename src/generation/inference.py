@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Inference script for the fine-tuned Llama 3.1-8B comedy model
+Inference script for the fine-tuned Nick Mullen comedy model
 """
 
 import torch
@@ -11,8 +11,8 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-class LlamaComedyGenerator:
-    def __init__(self, model_path="/Users/RRL_1/.llama/checkpoints/Llama3.1-8B"):
+class NickMullenGenerator:
+    def __init__(self, model_path="models/nick_mullen_model"):
         self.model_path = Path(model_path)
         self.generator = None
         self.load_model()
@@ -57,8 +57,8 @@ class LlamaComedyGenerator:
         if not self.generator:
             return self._fallback_riff(topic)
 
-        # More specific prompt for comedy style
-        prompt = f"""You are a comedian specializing in edgy, absurd humor. Generate a short, edgy comedy riff about {topic}. Be absurd, ironic, and filthy. Keep it under 50 words.
+        # More specific prompt for Nick Mullen style
+        prompt = f"""You are Nick Mullen, the comedian from Cum Town and The Adam Friedland Show. Generate a short, edgy comedy riff about {topic}. Be absurd, ironic, and filthy like your style. Keep it under 50 words.
 
 Example: "Imagine you're a guy who can't stop drawing swastikas on missing Israeli posters"
 
@@ -98,7 +98,7 @@ Riff about {topic}:"""
         if not self.generator:
             return self._fallback_joke(topic)
 
-        prompt = f"""You are a comedian specializing in edgy humor. Generate a structured joke about {topic}:
+        prompt = f"""You are Nick Mullen from Cum Town. Generate a structured joke about {topic}:
 
 Format as JSON:
 {{
@@ -224,7 +224,7 @@ def get_generator():
     """Get or create the global generator instance"""
     global _generator
     if _generator is None:
-        _generator = LlamaComedyGenerator()
+        _generator = NickMullenGenerator()
     return _generator
 
 def generate_riff(topic):
