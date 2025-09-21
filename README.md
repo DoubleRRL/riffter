@@ -4,12 +4,12 @@ AI-powered comedy sidekick for generating edgy, Nick Mullen-style riffs and joke
 
 ## Overview
 
-This project uses Ollama to power a local AI comedian. You give it a topic, and it generates structured jokes and quick riffs based on a specific, edgy comedic style. It's all managed through a simple web interface.
+This project fine-tunes DialoGPT-medium on Cum Town podcast transcripts to generate Nick Mullen-style comedy. The model learns from 31,000+ chunks of raw podcast dialogue to capture Nick's raw, unfiltered humor style. The system generates structured jokes and quick riffs through a simple web interface.
 
 ## Tech Stack
 
 -   **Backend**: FastAPI, Python
--   **AI**: Ollama with `Godmoded/llama3-lexi-uncensored`
+-   **AI**: Hugging Face Transformers with fine-tuned DialoGPT-medium
 -   **Frontend**: React, Vite
 
 ## Getting Started
@@ -84,27 +84,19 @@ python src/api/main.py          # Backend on :8000
 cd frontend && npm run dev      # Frontend on :5173
 ```
 
-**For content creation:**
-```bash
-# Process videos and extract transcripts
-python src/transcription/process_manual_video.py
-
-# Generate comedy content
-python src/generation/inference.py
-```
+**For content generation:**
+The AI model is ready to use once Ollama is set up. The backend automatically handles comedy generation requests.
 
 ## Project Structure
 
 ```
 riffter/
 ├── src/
-│   ├── transcription/     # Video download & audio processing
-│   ├── generation/        # AI comedy generation
+│   ├── generation/        # Ollama-based comedy generation
 │   ├── api/              # FastAPI backend
 │   └── utils/            # Helper utilities
-├── models/               # AI models (when trained)
-├── transcripts/          # Generated transcripts
-├── data/                 # Training datasets
+├── transcripts/          # Cum Town transcript data
+├── data/                 # Processed datasets
 ├── frontend/             # React web interface
 ├── docs/                 # Documentation
 └── start.sh             # Quick startup script

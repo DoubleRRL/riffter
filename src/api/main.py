@@ -4,6 +4,10 @@ from pydantic import BaseModel, field_validator
 from typing import Dict, Any, Literal
 import uvicorn
 import re
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from src.generation.inference import (
     generate_riff as local_generate_riff,
     generate_joke as local_generate_joke,

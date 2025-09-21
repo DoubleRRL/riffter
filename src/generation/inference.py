@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Inference script for the fine-tuned Nick Mullen comedy model
+Inference script for the fine-tuned Nick Mullen comedy model using Hugging Face
 """
 
 import torch
@@ -20,22 +20,40 @@ class NickMullenGenerator:
     def load_model(self):
         """Load the fine-tuned model and tokenizer"""
         if not self.model_path.exists():
-            logger.warning(f"Model path {self.model_path} does not exist. Using fallback.")
-            return False
+            logger.error(f"Model path {self.model_path} does not exist. No fallback - train the model first.")
+            self.generator = None
+            return
 
         try:
-            logger.info(f"Loading model from {self.model_path}")
+            logger.info(f"Loading fine-tuned model from {self.model_path}")
 
             # Load tokenizer
             tokenizer = AutoTokenizer.from_pretrained(str(self.model_path))
 
-            # Load model
-            model = AutoModelForCausalLM.from_pretrained(
-                str(self.model_path),
-                torch_dtype=torch.float16,
-                device_map="auto",
-                load_in_8bit=True,
-            )
+            # Load model - check for compute availability
+            cuda_available = torch.cuda.is_available()
+            mps_available = hasattr(torch.backends, 'mps') and torch.backends.mps.is_available()
+            device_type = "cuda" if cuda_available else ("mps" if mps_available else "cpu")
+
+            logger.info(f"CUDA available: {cuda_available}")
+            logger.info(f"MPS available: {mps_available}")
+            logger.info(f"Using device: {device_type}")
+
+            model_kwargs = {
+                "torch_dtype": torch.float32,  # Use float32 for compatibility
+            }
+
+            if device_type == "cuda":
+                model_kwargs["device_map"] = "auto"
+                model_kwargs["load_in_8bit"] = True  # Use 8-bit quantization for memory efficiency
+                logger.info("Using 8-bit quantization for GPU inference")
+            else:
+                # For MPS and CPU, use disk offloading
+                model_kwargs["device_map"] = "auto"  # This enables disk offloading
+                model_kwargs["torch_dtype"] = torch.float32
+                logger.info("Using disk offloading for inference")
+
+            model = AutoModelForCausalLM.from_pretrained(str(self.model_path), **model_kwargs)
 
             # Create text generation pipeline
             self.generator = pipeline(
@@ -45,31 +63,26 @@ class NickMullenGenerator:
                 device=0 if torch.cuda.is_available() else -1
             )
 
-            logger.info("Model loaded successfully")
-            return True
+            logger.info("Fine-tuned model loaded successfully")
 
         except Exception as e:
-            logger.error(f"Error loading model: {e}")
-            return False
+            logger.error(f"Error loading fine-tuned model: {e}")
+            logger.error("Model is corrupted or incompatible. Retrain the model.")
+            self.generator = None
 
     def generate_riff(self, topic, max_length=100):
-        """Generate a comedy riff about a topic"""
+        """Generate a comedy riff about a topic using the fine-tuned model"""
         if not self.generator:
             raise Exception("Model not loaded - cannot generate riff")
 
-        # More specific prompt for Nick Mullen style
-        prompt = f"""You are Nick Mullen, the comedian from Cum Town and The Adam Friedland Show. Generate a short, edgy comedy riff about {topic}. Be absurd, ironic, and filthy like your style. Keep it under 50 words.
-
-Example: "Imagine you're a guy who can't stop drawing swastikas on missing Israeli posters"
-
-Riff about {topic}:"""
+        prompt = f"Generate a comedy riff about {topic} in the style of Nick Mullen from Cum Town:"
 
         try:
             result = self.generator(
                 prompt,
-                max_new_tokens=50,  # Shorter outputs
+                max_new_tokens=100,  # Shorter outputs
                 num_return_sequences=1,
-                temperature=1.2,  # Higher temperature for more creativity
+                temperature=0.9,  # Slightly creative but not too random
                 top_p=0.95,
                 do_sample=True,
                 pad_token_id=self.generator.tokenizer.eos_token_id,
@@ -83,24 +96,22 @@ Riff about {topic}:"""
             # Clean up the riff
             riff = self._clean_riff(riff)
 
-            # If riff is too long or empty, raise error
-            if len(riff.split()) > 30 or len(riff.strip()) < 10:
-                raise Exception(f"Generated riff too short or too long: {riff}")
+            # Basic validation
+            if len(riff.split()) > 30 or len(riff.strip()) < 5:
+                logger.warning(f"Generated riff seems too short/long: {riff}")
 
-            if not riff:
-                raise Exception("Generated riff was empty")
-            return riff
+            return riff if riff else "Failed to generate riff"
 
         except Exception as e:
             logger.error(f"Error generating riff: {e}")
             raise Exception(f"Failed to generate riff: {str(e)}")
 
     def generate_joke(self, topic, max_length=200):
-        """Generate a structured joke about a topic"""
+        """Generate a structured joke about a topic using the fine-tuned model"""
         if not self.generator:
             raise Exception("Model not loaded - cannot generate joke")
 
-        prompt = f"""You are Nick Mullen from Cum Town. Generate a structured joke about {topic}:
+        prompt = f"""Generate a structured joke about {topic} in Nick Mullen's style from Cum Town.
 
 Format as JSON:
 {{
@@ -116,9 +127,9 @@ JSON:"""
         try:
             result = self.generator(
                 prompt,
-                max_length=max_length,
+                max_new_tokens=200,
                 num_return_sequences=1,
-                temperature=0.9,
+                temperature=0.8,
                 top_p=0.95,
                 do_sample=True,
                 pad_token_id=self.generator.tokenizer.eos_token_id
@@ -147,7 +158,7 @@ JSON:"""
             raise Exception(f"Failed to generate joke: {str(e)}")
 
     def regenerate_joke_part(self, topic, joke_context, part_to_regenerate):
-        """Regenerate a specific part of a joke"""
+        """Regenerate a specific part of a joke using the fine-tuned model"""
         if not self.generator:
             raise Exception("Model not loaded - cannot regenerate joke part")
 
@@ -162,19 +173,14 @@ JSON:"""
         if part_to_regenerate not in part_prompts:
             return joke_context.get(part_to_regenerate, "Generated content")
 
-        prompt = f"""You are Nick Mullen from Cum Town. {part_prompts[part_to_regenerate]}
-
-Style: Concise, punchy, absurd connections, raw phonetic sounds, modern slang when appropriate.
-Keep it under 20 words.
-
-Response:"""
+        prompt = f"Generate a new {part_to_regenerate} for this joke in Nick Mullen's style: {part_prompts[part_to_regenerate]}"
 
         try:
             result = self.generator(
                 prompt,
-                max_length=50,
+                max_new_tokens=50,
                 num_return_sequences=1,
-                temperature=0.9,
+                temperature=0.8,
                 top_p=0.95,
                 do_sample=True,
                 pad_token_id=self.generator.tokenizer.eos_token_id
