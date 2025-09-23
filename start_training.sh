@@ -5,7 +5,7 @@
 
 set -e
 
-echo "🚀 starting nick mullen DialoGPT-small model training..."
+echo "🚀 starting cum town DialoGPT-small model training..."
 
 # Colors
 RED='\033[0;31m'

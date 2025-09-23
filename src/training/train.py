@@ -12,6 +12,7 @@ from pathlib import Path
 import logging
 import os
 from dotenv import load_dotenv
+from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
 
 # Load environment variables
 load_dotenv()
@@ -53,11 +54,12 @@ def tokenize_function(examples, tokenizer):
 def train_model(
     data_path: str,
     model_name: str = "microsoft/DialoGPT-small",  # Smaller model (117M params) that fits in memory
-    output_dir: str = "models/nick_mullen_model",
+    output_dir: str = "models/cumtown_model",
     epochs: int = 3,
-    batch_size: int = 1,
+    batch_size: int = 2,  # Increased batch size for chunked data
     learning_rate: float = 2e-5,
-    gradient_accumulation_steps: int = 1
+    gradient_accumulation_steps: int = 2,  # Reduced for larger batch size
+    resume_from_checkpoint: str = None
 ):
     """Fine-tune the language model on Cum Town data"""
 
@@ -106,6 +108,24 @@ def train_model(
 
     model = AutoModelForCausalLM.from_pretrained(model_name, **model_kwargs)
 
+    # Configure LoRA for memory-efficient fine-tuning
+    lora_config = LoraConfig(
+        r=16,  # Rank dimension - higher = more capacity, lower = more efficient
+        lora_alpha=32,  # Scaling factor
+        target_modules=["c_attn", "c_proj", "c_fc"],  # GPT-2 attention modules
+        lora_dropout=0.1,
+        bias="none",
+        task_type="CAUSAL_LM"
+    )
+
+    # Prepare model for k-bit training (8-bit quantization)
+    if device_type == "cuda":
+        model = prepare_model_for_kbit_training(model)
+
+    # Apply LoRA to the model
+    model = get_peft_model(model, lora_config)
+    model.print_trainable_parameters()  # Show parameter reduction
+
     # Tokenize dataset
     tokenized_dataset = dataset.map(
         lambda x: tokenize_function(x, tokenizer),
@@ -119,20 +139,20 @@ def train_model(
         mlm=False  # Causal LM, not masked LM
     )
 
-    # Training arguments - different for CPU vs GPU
+    # Training arguments - optimized for LoRA training
     training_args_kwargs = {
         "output_dir": output_dir,
         "num_train_epochs": epochs,
-        "per_device_train_batch_size": batch_size,
-        "gradient_accumulation_steps": gradient_accumulation_steps,
-        "learning_rate": learning_rate,
+        "per_device_train_batch_size": batch_size * 2,  # Can use larger batch size with LoRA
+        "gradient_accumulation_steps": gradient_accumulation_steps // 2,  # Reduce accumulation since batch size increased
+        "learning_rate": learning_rate * 2,  # LoRA can handle higher learning rates
         "logging_dir": './logs',
         "logging_steps": 10,
-        "save_steps": 100,  # Less frequent saves for smaller model
-        "save_total_limit": 3,  # Keep more checkpoints
+        "save_steps": 50,  # More frequent saves for LoRA (smaller checkpoints)
+        "save_total_limit": 5,  # Keep more checkpoints
         "dataloader_num_workers": 0,  # Avoid multiprocessing issues
         "remove_unused_columns": False,
-        "warmup_steps": 100,  # Warmup for stable training
+        "warmup_steps": 50,  # Shorter warmup for LoRA
         "weight_decay": 0.01,  # Small weight decay
     }
 
@@ -166,30 +186,46 @@ def train_model(
     )
 
     # Start training
-    logger.info("Starting model training...")
-    trainer.train()
+    logger.info("Starting LoRA fine-tuning...")
+    trainer.train(resume_from_checkpoint=resume_from_checkpoint)
 
-    # Save the final model
+    # Save the LoRA adapters and tokenizer
     trainer.save_model(output_dir)
-    logger.info(f"Model saved to {output_dir}")
+    logger.info(f"LoRA adapters saved to {output_dir}")
 
     # Save tokenizer
     tokenizer.save_pretrained(output_dir)
 
+    # Also save the base model config for inference
+    model.config.save_pretrained(output_dir)
+
 def main():
-    training_data_path = "data/cumtown_training_data.json"
+    training_data_path = "data/cumtown_chunked_training_data.json"
 
     if not Path(training_data_path).exists():
         logger.error(f"Training data not found: {training_data_path}")
-        logger.error("Run: python src/training/process_cumtown_data.py")
+        logger.error("Run chunking script first")
         return
+
+    # Resume from latest checkpoint if it exists
+    model_dir = Path("models/cumtown_model")
+    checkpoints = list(model_dir.glob("checkpoint-*"))
+    if checkpoints:
+        # Find the checkpoint with the highest step number
+        latest_checkpoint = max(checkpoints, key=lambda x: int(x.name.split("-")[1]))
+        print(f"🔄 Resuming from checkpoint: {latest_checkpoint.name}")
+        resume_from_checkpoint = str(latest_checkpoint)
+    else:
+        print("🆕 Starting fresh training")
+        resume_from_checkpoint = None
 
     train_model(
         data_path=training_data_path,
         epochs=3,
-        batch_size=2,  # Small batch size for DialoGPT-small on M2
+        batch_size=2,
         learning_rate=2e-5,
-        gradient_accumulation_steps=4  # Effective batch size = 4
+        gradient_accumulation_steps=2,
+        resume_from_checkpoint=resume_from_checkpoint
     )
 
 if __name__ == "__main__":

@@ -11,8 +11,8 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-class NickMullenGenerator:
-    def __init__(self, model_path="models/nick_mullen_model"):
+class CumTownGenerator:
+    def __init__(self, model_path="models/cumtown_model"):
         self.model_path = Path(model_path)
         self.generator = None
         self.load_model()
@@ -75,7 +75,7 @@ class NickMullenGenerator:
         if not self.generator:
             raise Exception("Model not loaded - cannot generate riff")
 
-        prompt = f"Generate a comedy riff about {topic} in the style of Nick Mullen from Cum Town:"
+        prompt = f"Generate a comedy riff about {topic} in the style of Cum Town podcast:"
 
         try:
             result = self.generator(
@@ -111,7 +111,7 @@ class NickMullenGenerator:
         if not self.generator:
             raise Exception("Model not loaded - cannot generate joke")
 
-        prompt = f"""Generate a structured joke about {topic} in Nick Mullen's style from Cum Town.
+        prompt = f"""Generate a structured joke about {topic} in the style of Cum Town podcast.
 
 Format as JSON:
 {{
@@ -163,7 +163,7 @@ JSON:"""
             raise Exception("Model not loaded - cannot regenerate joke part")
 
         part_prompts = {
-            "premise": f"Generate a new premise about {topic} in Nick Mullen's style:",
+            "premise": f"Generate a new premise about {topic} in Cum Town podcast style:",
             "punchline": f"Generate a new punchline for this premise: {joke_context.get('premise', '')}",
             "initial_tag": f"Generate a new tag for this joke: {joke_context.get('premise', '')} -> {joke_context.get('punchline', '')}",
             "alternate_angle": f"Generate a new angle on this topic: {topic}",
@@ -173,7 +173,7 @@ JSON:"""
         if part_to_regenerate not in part_prompts:
             return joke_context.get(part_to_regenerate, "Generated content")
 
-        prompt = f"Generate a new {part_to_regenerate} for this joke in Nick Mullen's style: {part_prompts[part_to_regenerate]}"
+        prompt = f"Generate a new {part_to_regenerate} for this joke in Cum Town podcast style: {part_prompts[part_to_regenerate]}"
 
         try:
             result = self.generator(
@@ -261,7 +261,7 @@ def get_generator():
     """Get or create the global generator instance"""
     global _generator
     if _generator is None:
-        _generator = NickMullenGenerator()
+        _generator = CumTownGenerator()
     return _generator
 
 def generate_riff(topic):
@@ -280,10 +280,10 @@ if __name__ == "__main__":
     # Test the generator
     generator = get_generator()
 
-    print("Testing riff generation:")
+    print("Testing Cum Town riff generation:")
     riff = generator.generate_riff("dating apps")
     print(f"Riff: {riff}")
 
-    print("\nTesting joke generation:")
+    print("\nTesting Cum Town joke generation:")
     joke = generator.generate_joke("politics")
     print(f"Joke: {joke}")

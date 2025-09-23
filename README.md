@@ -1,63 +1,58 @@
 # Riffter
 
-AI-powered comedy sidekick for generating edgy, Nick Mullen-style riffs and jokes.
+Custom LoRA-trained comedy bot that riffs like Cum Town. Built from scratch on an M2 Air, trained on 26k chunks of raw podcast dialogue.
 
 ## Overview
 
-This project fine-tunes DialoGPT-small on Cum Town podcast transcripts to generate Nick Mullen-style comedy. The model learns from 600+ chunks of raw podcast dialogue to capture Nick's raw, unfiltered humor style. The system generates structured jokes and quick riffs through a simple web interface.
+We took Microsoft's DialoGPT-small and LoRA fine-tuned it on Cum Town transcripts for ~19,600 steps. The result? A model that captures Nick Mullen's wild, unfiltered comedy style - deep cuts, absurd connections, and that raw "feels wrong but right" logic. No generic AI bullshit here.
+
+The system serves up structured jokes and quick riffs through a clean web interface. Training completed successfully with LoRA adapters, running on Apple MPS for max M2 Air performance.
 
 ## Tech Stack
 
--   **Backend**: FastAPI, Python
--   **AI**: Hugging Face Transformers with fine-tuned DialoGPT-small
--   **Frontend**: React, Vite
+-   **Backend**: FastAPI, Python 3.13
+-   **AI**: DialoGPT-small + LoRA fine-tuning (Hugging Face Transformers)
+-   **Training**: ~19,600 steps on M2 Air with Apple MPS acceleration
+-   **Frontend**: React + Vite
+-   **Hardware**: Built and trained on M2 Air (8GB RAM)
 
 ## Getting Started
 
 **What you need:**
-- Python 3.8+ (you're probably already running this)
-- Node.js (download from nodejs.org if you don't have it)
-- Ollama installed (grab it from ollama.ai) [[memory:4807211]]
+- Python 3.8+ (we used 3.13)
+- Node.js for the frontend
 
-**Quick start (use the script):**
+**Quick start:**
 ```bash
 ./start.sh
 ```
 
-This script handles everything - sets up the virtual environment, installs dependencies, and starts both the backend and frontend. Boom, you're done.
+This fires up everything - backend on :8000, frontend on :5173.
 
-**Manual setup (if you hate easy things):**
+**Manual setup:**
 
-1. **Install Ollama model** (optional, but recommended):
-   ```bash
-   ollama pull Godmoded/llama3-lexi-uncensored
-   ```
-
-2. **Set up Python stuff**:
+1. **Python environment**:
    ```bash
    python3 -m venv venv
    source venv/bin/activate
    pip install -r requirements.txt
    ```
 
-3. **Install frontend dependencies**:
+2. **Frontend**:
    ```bash
    cd frontend
    npm install
    cd ..
    ```
 
-4. **Start the services**:
+3. **Start services**:
    ```bash
-   # Terminal 1 - Backend
+   # Backend
    python src/api/main.py
 
-   # Terminal 2 - Frontend
-   cd frontend
-   npm run dev
+   # Frontend
+   cd frontend && npm run dev
    ```
-
-The backend runs on `http://localhost:8000`, frontend on `http://localhost:5173`.
 
 ## The Comedian's Personality
 
@@ -74,30 +69,28 @@ This persona is baked into the prompts to ensure the output doesn't sound like a
 
 ## Usage
 
-**For development:**
+**Start the app:**
 ```bash
-# Quick start (recommended)
 ./start.sh
-
-# Or manual start
-python src/api/main.py          # Backend on :8000
-cd frontend && npm run dev      # Frontend on :5173
 ```
 
-**For content generation:**
-The AI model is ready to use once Ollama is set up. The backend automatically handles comedy generation requests.
+The web interface will be at `http://localhost:5173`. Type in prompts and get Cum Town-style riffs back. The backend loads the LoRA-trained DialoGPT model automatically.
 
 ## Project Structure
 
 ```
 riffter/
 ├── src/
-│   ├── generation/        # Ollama-based comedy generation
 │   ├── api/              # FastAPI backend
+│   ├── generation/       # Model inference code
+│   ├── training/         # LoRA training scripts
 │   └── utils/            # Helper utilities
-├── transcripts/          # Cum Town transcript data
-├── data/                 # Processed datasets
+├── models/
+│   └── cumtown_model/    # LoRA-trained DialoGPT + checkpoints
+├── transcripts/          # Raw Cum Town transcripts
+├── data/                 # Processed training data (26k chunks)
 ├── frontend/             # React web interface
 ├── docs/                 # Documentation
-└── start.sh             # Quick startup script
+├── start.sh             # Quick startup script
+└── start_training.sh    # Training launcher
 ```
