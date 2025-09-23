@@ -141,7 +141,7 @@ function App() {
     }
   }
 
-  const regenerateField = async (part) => {
+  const regenerateField = async (part, index = null) => {
     if (!topic.trim()) return;
 
     setLoading(true);
@@ -169,7 +169,10 @@ function App() {
 
       setCurrentJoke(prev => {
         const updated = { ...prev };
-        if (Object.keys(updated).includes(part)) {
+        if (part === 'additional_tags') {
+          // For tags, replace the entire array
+          updated[part] = Array.isArray(newContent) ? newContent : [newContent];
+        } else if (Object.keys(updated).includes(part)) {
           updated[part] = newContent;
         }
         return updated;

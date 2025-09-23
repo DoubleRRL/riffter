@@ -3,80 +3,91 @@ base_model: microsoft/DialoGPT-small
 library_name: peft
 pipeline_tag: text-generation
 tags:
-- base_model:adapter:microsoft/DialoGPT-small
+- comedy
+- humor
+- cum-town
+- nick-mullen
+- dialogue
 - lora
+- peft
 - transformers
 ---
 
-# Model Card for Model ID
+# Riffter: Cum Town Comedy Bot
 
-<!-- Provide a quick summary of what the model is/does. -->
-
-
+A LoRA fine-tuned DialoGPT-small model trained on Cum Town podcast transcripts to generate Nick Mullen-style comedy riffs and jokes.
 
 ## Model Details
 
 ### Model Description
 
-<!-- Provide a longer summary of what this model is. -->
+This model was trained from Microsoft's DialoGPT-small using LoRA (Low-Rank Adaptation) on 26,264 chunks of Cum Town podcast dialogue. The result is a comedy bot that captures the show's signature style: deep cuts, absurd connections, raw humor, and that "wrong but feels right" logic that Nick Mullen is known for.
 
+- **Developed by:** DoubleRRL (trained on M2 Air)
+- **Model type:** LoRA fine-tuned DialoGPT-small
+- **Language(s):** English
+- **License:** MIT
+- **Base model:** microsoft/DialoGPT-small
 
+### Model Sources
 
-- **Developed by:** [More Information Needed]
-- **Funded by [optional]:** [More Information Needed]
-- **Shared by [optional]:** [More Information Needed]
-- **Model type:** [More Information Needed]
-- **Language(s) (NLP):** [More Information Needed]
-- **License:** [More Information Needed]
-- **Finetuned from model [optional]:** [More Information Needed]
-
-### Model Sources [optional]
-
-<!-- Provide the basic links for the model. -->
-
-- **Repository:** [More Information Needed]
-- **Paper [optional]:** [More Information Needed]
-- **Demo [optional]:** [More Information Needed]
+- **Repository:** https://github.com/DoubleRRL/riffter
+- **Demo:** Run locally with the Riffter web app
 
 ## Uses
 
-<!-- Address questions around how the model is intended to be used, including the foreseeable users of the model and those affected by the model. -->
-
 ### Direct Use
 
-<!-- This section is for the model use without fine-tuning or plugging into a larger ecosystem/app. -->
+This model generates edgy comedy riffs and jokes in the style of Cum Town. Best used for:
+- Comedy writing and ideation
+- Entertainment and humor generation
+- Creative writing prompts
+- Comedy analysis and study
 
-[More Information Needed]
+### Example Usage
 
-### Downstream Use [optional]
+```python
+from transformers import AutoModelForCausalLM, AutoTokenizer
+from peft import PeftModel
 
-<!-- This section is for the model use when fine-tuned for a task, or when plugged into a larger ecosystem/app -->
+# Load base model
+base_model = AutoModelForCausalLM.from_pretrained("microsoft/DialoGPT-small")
+tokenizer = AutoTokenizer.from_pretrained("microsoft/DialoGPT-small")
 
-[More Information Needed]
+# Load LoRA adapter
+model = PeftModel.from_pretrained(base_model, "DoubleRRL/riffter-cumtown-lora")
+
+# Generate comedy
+prompt = "What's the deal with people who wear socks with sandals?"
+inputs = tokenizer(prompt, return_tensors="pt")
+outputs = model.generate(**inputs, max_length=100, temperature=0.8, do_sample=True)
+response = tokenizer.decode(outputs[0], skip_special_tokens=True)
+print(response)
+```
 
 ### Out-of-Scope Use
 
-<!-- This section addresses misuse, malicious use, and uses that the model will not work well for. -->
-
-[More Information Needed]
+- Generic conversational AI
+- Factual information or advice
+- Safe-for-work content (this model generates adult comedy)
+- Any use requiring factual accuracy
 
 ## Bias, Risks, and Limitations
 
-<!-- This section is meant to convey both technical and sociotechnical limitations. -->
-
-[More Information Needed]
+This model was trained on adult comedy content that includes profanity, controversial topics, and edgy humor. It may generate inappropriate or offensive content.
 
 ### Recommendations
 
-<!-- This section is meant to convey recommendations with respect to the bias, risk, and technical limitations. -->
-
-Users (both direct and downstream) should be made aware of the risks, biases and limitations of the model. More information needed for further recommendations.
+- Use for entertainment purposes only
+- Be aware of the source material's adult nature
+- Don't rely on this model for factual information
+- Consider content warnings when sharing generated material
 
 ## How to Get Started with the Model
 
-Use the code below to get started with the model.
-
-[More Information Needed]
+1. Install dependencies: `pip install transformers peft torch`
+2. Load the model as shown in the usage example above
+3. Start generating comedy with Cum Town-style prompts
 
 ## Training Details
 
